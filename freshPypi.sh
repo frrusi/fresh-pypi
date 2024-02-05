@@ -10,7 +10,7 @@ MIRROR="https://pypi.org"
 printf "\033c"
 
 # --- File check --- #
-if [ ! -n "$1" ] || [ ! -f "$1" ]; then
+if [ -z "$1" ] || [ ! -f "$1" ]; then
   printf "[%s %s] [ERROR] File not found. Program exit.\n" "$(date +"%F")" "$(date +"%T")"
   exit 404
 elif [ ! -s "$1" ]; then
