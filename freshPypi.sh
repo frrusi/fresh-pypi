@@ -63,7 +63,7 @@ done < "$filename"
 # --- Interactive output --- #
 for (( i=0; i<${#packages[@]}; i++ ));
 do
-  read -r -p $"[INTERACTIVE] The final result (change, press the 'Enter' key): " -e -i "${packages[$i]}" packages[$i]
+  read -r -p $"[INTERACTIVE] The final result (change, press the 'Enter' key): " -e -i "${packages[$i]}" packages["$i"]
   printf "%s\n" "${packages[$i]}" >> requirements.new
 done
 
