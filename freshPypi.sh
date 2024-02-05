@@ -12,10 +12,10 @@ printf "\033c"
 # --- File check --- #
 if [ -z "$1" ] || [ ! -f "$1" ]; then
   printf "[%s %s] [ERROR] File not found. Program exit.\n" "$(date +"%F")" "$(date +"%T")"
-  exit 404
+  exit 1
 elif [ ! -s "$1" ]; then
   printf "[%s %s] [ERROR] File ${BROWN}%s${NOCOLOR} is empty. Program exit.\n" "$(date +"%F")" "$(date +"%T")" "$1"
-  exit 400
+  exit 1
 else
   filename="$1"
 fi
