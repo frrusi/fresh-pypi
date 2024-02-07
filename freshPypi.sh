@@ -1,21 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# --- CONSTANTS --- #
-BROWN="\033[0;33m"
-NOCOLOR="\033[0m"
+# --- сonstants --- #
+BROWN='\033[0;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+RESET='\033[0m'
+CLEAR='\033c'
 
 MIRROR="https://pypi.org"
 
-# --- Cleaning the Terminal --- #
-printf "\033c"
+function getMessage {
+  # $1 - user message
+  printf '[%s %s] %b\n' "$(date +"%F")" "$(date +"%T")" "$1"
+}
+
+function getErrorMessage {
+  # $1 - user message
+  getMessage "[${RED}error${RESET}] $1"
+  exit 1
+}
+
+function getWarningMessage {
+  # $1 - user message
+  getMessage "[${BROWN}warning${RESET}] $1"
+}
+
+function getNotificationMessage {
+  # $1 - user message
+  getMessage "[${BLUE}notification${RESET}] $1"
+}
+
+function clearTerminal {
+  printf '%b' $CLEAR
+}
+
+# --- main --- #
+clearTerminal
 
 # --- File check --- #
 if [ -z "$1" ] || [ ! -f "$1" ]; then
-  printf "[%s %s] [ERROR] File not found. Program exit.\n" "$(date +"%F")" "$(date +"%T")"
-  exit 1
+  getErrorMessage 'file not found'
 elif [ ! -s "$1" ]; then
-  printf "[%s %s] [ERROR] File ${BROWN}%s${NOCOLOR} is empty. Program exit.\n" "$(date +"%F")" "$(date +"%T")" "$1"
-  exit 1
+  getErrorMessage "file ${BROWN}$1${RESET} is empty"
 else
   filename="$1"
 fi
@@ -24,7 +50,7 @@ fi
 declare -a packages
 
 while IFS= read -r line; do
-  printf "[%s %s] [DEBUG] Read line from file: ${BROWN}%s${NOCOLOR}\n" "$(date +"%F")" "$(date +"%T")" "$line"
+  getNotificationMessage "read line from file: ${BROWN}$line${RESET}"
 
   # Package name: https://packaging.python.org/en/latest/specifications/name-normalization/
   # Package version: https://peps.python.org/pep-0440/#version-scheme | https://peps.python.org/pep-0440/#appendix-b-parsing-version-strings-with-regular-expressions
@@ -37,25 +63,25 @@ while IFS= read -r line; do
       packageVersion=None
     fi
 
-    printf "[%s %s] [DEBUG] Parsing a package: name=${BROWN}%s${NOCOLOR}, version=${BROWN}%s${NOCOLOR}\n" "$(date +"%F")" "$(date +"%T")" "$packageName" "$packageVersion"
+    getNotificationMessage "parsing a package: name=${BROWN}$packageName${RESET}, version=${BROWN}$packageVersion${RESET}"
 
     pypiAnswer="$(curl -s "$MIRROR/pypi/$packageName/json")"
     if [ "$(printf "%s" "$pypiAnswer" | jq '.message' | tr -d \")" == "Not Found" ]; then
-      printf "[%s %s] [WARNING] The package ${BROWN}%s${NOCOLOR} does not exist\n\n" "$(date +"%F")" "$(date +"%T")" "$packageName"
+      getWarningMessage "the package ${BROWN}$packageName${RESET} does not exist"
       continue
     fi
 
     lastVersionPackage="$(printf "%s" "$pypiAnswer" | jq '.info.version' | tr -d \")"
 
     if [ "$packageVersion" == "None" ]; then
-      printf "[%s %s] [WARNING] The version of the package ${BROWN}%s${NOCOLOR} is not specified\n" "$(date +"%F")" "$(date +"%T")" "$packageName"
+      getWarningMessage "the version of the package ${BROWN}$packageName${RESET} is not specified"
     elif [ "$packageVersion" != "$lastVersionPackage" ]; then
-      printf "[%s %s] [WARNING] The ${BROWN}%s${NOCOLOR} package version ${BROWN}%s${NOCOLOR} is old. New version=${BROWN}%s${NOCOLOR}\n" "$(date +"%F")" "$(date +"%T")" "$packageName" "$packageVersion" "$lastVersionPackage"
+      getWarningMessage "the ${BROWN}$packageName${RESET} package version ${BROWN}$packageVersion${RESET} is old. New version=${BROWN}$lastVersionPackage${RESET}"
     fi
 
     packages+=("$packageName==$lastVersionPackage")
   else
-    printf "[%s %s] [WARNING] The name of the package is invalid\n" "$(date +"%F")" "$(date +"%T")"
+    getWarningMessage "the name of the package is invalid"
   fi
   printf "\n"
 done < "$filename"
@@ -67,4 +93,4 @@ do
   printf "%s\n" "${packages[$i]}" >> requirements.new
 done
 
-printf "[%s %s] [NOTIFICATION] The change is saved in 'requirements.new'\n" "$(date +"%F")" "$(date +"%T")"
+getNotificationMessage "the change is saved in 'requirements.new'"
