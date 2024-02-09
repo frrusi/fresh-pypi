@@ -49,7 +49,8 @@ fi
 # --- Read File --- #
 declare -a packages
 
-while IFS= read -r line; do
+# https://unix.stackexchange.com/a/478732
+while IFS= read -r line || [[ -n $line ]]; do
   getNotificationMessage "read line from file: ${BROWN}$line${RESET}"
 
   # Package name: https://packaging.python.org/en/latest/specifications/name-normalization/
